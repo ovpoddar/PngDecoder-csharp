@@ -23,7 +23,7 @@ internal struct PNGChunk
 
         stream.Read(responce);
         this.Signature = responce.ToStruct<PngChunkType>();
-        
+
         this.Data = stream.Position;
         _stream.Seek(this.Length, SeekOrigin.Current);
 

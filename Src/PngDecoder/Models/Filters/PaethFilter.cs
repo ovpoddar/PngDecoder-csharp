@@ -1,23 +1,17 @@
 ﻿// Ignore Spelling: Paeth
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace PngDecoder.Filters;
+namespace PngDecoder.Models.Filters;
 internal class PaethFilter : BaseFilter
 {
     public PaethFilter(Stream stream) : base(stream) { }
 
-    public override void Apply(byte current, int scanLineWidth)
+    public override byte UnApply(byte current, int scanLineWidth)
     {
         current = (byte)(current + PaethCalculate(
             GetLeftByte(scanLineWidth),
             GetTopByte(scanLineWidth),
             GetTopLeftByte(scanLineWidth)));
-        base.Apply(current, scanLineWidth);
+        return base.UnApply(current, scanLineWidth);
     }
 
     private static byte PaethCalculate(byte left, byte top, byte upperLeft)

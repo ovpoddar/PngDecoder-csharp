@@ -1,14 +1,9 @@
 ﻿using PngDecoder.Exceptions;
 using PngDecoder.Extension;
-using PngDecoder.Filters;
 using PngDecoder.Models;
-using System;
+using PngDecoder.Models.Filters;
 using System.Buffers;
-using System.Diagnostics;
-using System.IO;
 using System.IO.Compression;
-using System.Numerics;
-using System.Reflection.PortableExecutable;
 
 namespace PngDecoder;
 
@@ -72,7 +67,7 @@ public class PNGDecode
             ArrayPool<byte>.Shared.Return(raw);
         }
 
-        return null;
+        return result;
     }
 
     private void UnfilterStream(Stream filteredRawData, int scanLineLength)
@@ -87,7 +82,8 @@ public class PNGDecode
                 filter = GetFilter(currentByte[0], filteredRawData);
                 continue;
             }
-            filter.Apply(currentByte[0], scanLineLength);
+            var compressByte = filter.UnApply(currentByte[0], scanLineLength);
+
         }
     }
 
