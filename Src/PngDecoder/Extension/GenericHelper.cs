@@ -59,4 +59,15 @@ internal static class GenericHelper
 
         return resultAsByte.ToStruct<T>();
     }
+
+    internal static byte ReadByteNotMove(this Stream stream, long index)
+    {
+        var current = stream.Position;
+
+        Span<byte> result = stackalloc byte[1];
+        stream.Seek(index, SeekOrigin.Current);
+        stream.Read(result);
+        stream.Seek(current, SeekOrigin.Begin);
+        return result[0];
+    }
 }

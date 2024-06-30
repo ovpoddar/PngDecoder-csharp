@@ -1,5 +1,6 @@
 ﻿using PngDecoder.Exceptions;
 using PngDecoder.Extension;
+using PngDecoder.Filters;
 using PngDecoder.Models;
 using System.Buffers;
 using System.Diagnostics;
@@ -62,8 +63,7 @@ public class PNGDecode
             using var filteredRawStream = new ZLibStream(encodedFilteredRawData, CompressionMode.Decompress, false);
             using var filteredMutableRawStream = new MemoryStream();
             filteredRawStream.CopyTo(filteredRawStream);
-            var filteredRawData = ArrayPool<byte>.Shared.Rent((int)filteredMutableRawStream.Length);
-            filteredMutableRawStream.Read(filteredRawData);
+            UnfilterStream(filteredMutableRawStream, ++scanlineLength);
         }
         finally
         {
@@ -73,5 +73,31 @@ public class PNGDecode
         return null;
     }
 
+    private void UnfilterStream(Stream filteredRawData, int scanLineLength)
+    {
+        filteredRawData.Seek(0, SeekOrigin.Begin);
+        Span<byte> currentByte = stackalloc byte[1];
+        BaseFilter filter = new NonFilter();
+        while (filteredRawData.Read(currentByte) != 0)
+        {
+            if (filteredRawData.Position == 1 || filteredRawData.Position % scanLineLength == 1)
+            {
+                filter = GetFilter(currentByte[0]);
+                continue;
+            }
+            filter.Apply(filteredRawData, currentByte[0], scanLineLength);
+        }
+    }
+
+    private BaseFilter GetFilter(byte mode) =>
+        mode switch
+        {
+            0 => new NonFilter(),
+            1 => new SubFilter(),
+            _ => null
+        };
+
+    public bool Check() =>
+        _chunks.Any();
 
 }
