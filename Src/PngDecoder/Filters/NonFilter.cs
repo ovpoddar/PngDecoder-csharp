@@ -7,4 +7,5 @@ using System.Threading.Tasks;
 namespace PngDecoder.Filters;
 internal class NonFilter : BaseFilter
 {
+    public NonFilter(Stream stream) : base(stream) { }
 }

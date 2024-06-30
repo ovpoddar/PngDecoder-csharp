@@ -2,10 +2,12 @@
 using PngDecoder.Extension;
 using PngDecoder.Filters;
 using PngDecoder.Models;
+using System;
 using System.Buffers;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Numerics;
 using System.Reflection.PortableExecutable;
 
 namespace PngDecoder;
@@ -62,7 +64,7 @@ public class PNGDecode
             using var encodedFilteredRawData = new MemoryStream(raw);
             using var filteredRawStream = new ZLibStream(encodedFilteredRawData, CompressionMode.Decompress, false);
             using var filteredMutableRawStream = new MemoryStream();
-            filteredRawStream.CopyTo(filteredRawStream);
+            filteredRawStream.CopyTo(filteredMutableRawStream);
             UnfilterStream(filteredMutableRawStream, ++scanlineLength);
         }
         finally
@@ -77,24 +79,27 @@ public class PNGDecode
     {
         filteredRawData.Seek(0, SeekOrigin.Begin);
         Span<byte> currentByte = stackalloc byte[1];
-        BaseFilter filter = new NonFilter();
+        BaseFilter filter = new NonFilter(filteredRawData);
         while (filteredRawData.Read(currentByte) != 0)
         {
             if (filteredRawData.Position == 1 || filteredRawData.Position % scanLineLength == 1)
             {
-                filter = GetFilter(currentByte[0]);
+                filter = GetFilter(currentByte[0], filteredRawData);
                 continue;
             }
-            filter.Apply(filteredRawData, currentByte[0], scanLineLength);
+            filter.Apply(currentByte[0], scanLineLength);
         }
     }
 
-    private BaseFilter GetFilter(byte mode) =>
+    private static BaseFilter GetFilter(byte mode, Stream filteredRawData) =>
         mode switch
         {
-            0 => new NonFilter(),
-            1 => new SubFilter(),
-            _ => null
+            0 => new NonFilter(filteredRawData),
+            1 => new SubFilter(filteredRawData),
+            2 => new UpFilter(filteredRawData),
+            3 => new AverageFilter(filteredRawData),
+            4 => new PaethFilter(filteredRawData),
+            _ => throw new NotImplementedException()
         };
 
     public bool Check() =>

@@ -5,13 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace PngDecoder.Filters;
-internal class SubFilter : BaseFilter
+internal class UpFilter : BaseFilter
 {
-    public SubFilter(Stream stream) : base(stream) { }
+    public UpFilter(Stream stream) : base(stream) { }
 
     public override void Apply(byte current, int scanLineWidth)
     {
-        current = (byte)(GetLeftByte(scanLineWidth) + current);
+        current = (byte)(GetTopByte(scanLineWidth) + current);
         base.Apply(current, scanLineWidth);
     }
 }

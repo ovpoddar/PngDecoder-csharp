@@ -1,49 +1,55 @@
 ﻿namespace PngDecoder.Filters;
 public class BaseFilter
 {
-    public virtual void Apply(Stream stream, byte current, int scanLineWidth)
+    private readonly Stream _stream;
+
+    public BaseFilter(Stream stream) =>
+        _stream = stream;
+
+    public virtual void Apply(byte current, int scanLineWidth)
     {
-        // write can be here
+        _stream.Seek(-1, SeekOrigin.Current);
+        _stream.WriteByte(current);
     }
 
-    public byte GetLeftByte(Stream stream, int lineWidth)
+    public byte GetLeftByte(int lineWidth)
     {
         Span<byte> result = stackalloc byte[1];
-        if (stream.Position % lineWidth != 2)
+        if (_stream.Position % lineWidth != 2)
         {
-            stream.Seek(-2, SeekOrigin.Current);
-            stream.Read(result);
-            stream.Seek(1, SeekOrigin.Current);
+            _stream.Seek(-2, SeekOrigin.Current);
+            _stream.Read(result);
+            _stream.Seek(1, SeekOrigin.Current);
         }
         return result[0];
     }
 
-    public byte GetTopByte(Stream stream, int lineWidth)
+    public byte GetTopByte(int lineWidth)
     {
-        var topIndex = (stream.Position - lineWidth - 1);
+        var topIndex = (_stream.Position - lineWidth - 1);
         Span<byte> result = stackalloc byte[1];
         if (topIndex >= 0)
         {
-            var tempCurrentIndex = stream.Position;
-            stream.Seek(topIndex, SeekOrigin.Begin);
-            stream.Read(result);
+            var tempCurrentIndex = _stream.Position;
+            _stream.Seek(topIndex, SeekOrigin.Begin);
+            _stream.Read(result);
 
-            stream.Seek(tempCurrentIndex, SeekOrigin.Begin);
+            _stream.Seek(tempCurrentIndex, SeekOrigin.Begin);
         }
         return result[0];
     }
 
-    public byte GetTopLeftByte(Stream stream, int lineWidth)
+    public byte GetTopLeftByte(int lineWidth)
     {
-        var topLeftIndex = (stream.Position - lineWidth - 2);
+        var topLeftIndex = (_stream.Position - lineWidth - 2);
         Span<byte> result = stackalloc byte[1];
-        if (topLeftIndex >= 0 && stream.Position % lineWidth != 2)
+        if (topLeftIndex >= 0 && _stream.Position % lineWidth != 2)
         {
-            var tempCurrentIndex = stream.Position;
+            var tempCurrentIndex = _stream.Position;
 
-            stream.Seek(topLeftIndex, SeekOrigin.Begin);
-            stream.Read(result);
-            stream.Seek(tempCurrentIndex, SeekOrigin.Begin);
+            _stream.Seek(topLeftIndex, SeekOrigin.Begin);
+            _stream.Read(result);
+            _stream.Seek(tempCurrentIndex, SeekOrigin.Begin);
         }
         return result[0];
     }
