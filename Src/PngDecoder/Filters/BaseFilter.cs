@@ -37,11 +37,7 @@ public class BaseFilter
     {
         var topLeftIndex = (stream.Position - lineWidth - 2);
         Span<byte> result = stackalloc byte[1];
-        // CAN BE SIMPLIFY WITHOUT CALCULATION
-        if (
-            //topLeftIndex >= 0 || // replacement
-            stream.Position / lineWidth != 1 ||
-            stream.Position % lineWidth != 2)
+        if (topLeftIndex >= 0 && stream.Position % lineWidth != 2)
         {
             var tempCurrentIndex = stream.Position;
 
