@@ -78,15 +78,15 @@ public class PNGDecode
         var writtenIndex = 0;
         var currentRow = -1;
         Span<byte> currentByte = stackalloc byte[1];
-        var writtenSection = new Span<byte>(result, 0, (int)converter.Ihdr.Width);
+        var writtenSection = new Span<byte>();
         BaseFilter filter = new NonFilter(filteredRawData);
         while (filteredRawData.Read(currentByte) != 0)
         {
             if (filteredRawData.Position == 1 || filteredRawData.Position % scanLineLength == 1)
             {
+                writtenIndex = 0;
                 currentRow++;
-                filter = GetFilter(currentByte[0], filteredRawData);
-                //var s = $"From:{(currentRow * converter.Ihdr.Width)} to:{currentRow * converter.Ihdr.Width + converter.Ihdr.Width}";
+               filter = GetFilter(currentByte[0], filteredRawData);
                 writtenSection = new Span<byte>(result,
                     (int)(currentRow * converter.Ihdr.Width * 4),
                     (int)converter.Ihdr.Width * 4);

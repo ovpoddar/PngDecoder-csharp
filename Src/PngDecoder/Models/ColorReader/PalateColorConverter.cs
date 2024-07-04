@@ -24,9 +24,8 @@ internal class PalateColorConverter : BaseRGBColorConverter
                 byte mask = (byte)(bitDetails.mask << j);
                 byte currentBit = (byte)((inputByte & mask) >> j);
                 var colors = _data[currentBit];
-                var currentWritingIndex = writeIndex / 4m;
 
-                if (currentWritingIndex < Ihdr.Width)
+                if (writeIndex < Ihdr.Width * 4)
                 {
                     for (int i = 0; i < colors.Length; i++)
                     {
