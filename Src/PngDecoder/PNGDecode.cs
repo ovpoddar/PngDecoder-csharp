@@ -86,13 +86,14 @@ public class PNGDecode
             {
                 currentRow++;
                 filter = GetFilter(currentByte[0], filteredRawData);
+                //var s = $"From:{(currentRow * converter.Ihdr.Width)} to:{currentRow * converter.Ihdr.Width + converter.Ihdr.Width}";
                 writtenSection = new Span<byte>(result,
-                    (int)(currentRow * converter.Ihdr.Width),
-                    (int)converter.Ihdr.Width);
+                    (int)(currentRow * converter.Ihdr.Width * 4),
+                    (int)converter.Ihdr.Width * 4);
                 continue;
             }
             var compressByte = filter.UnApply(currentByte[0], scanLineLength);
-            converter.Write(result, compressByte, ref writtenIndex);
+            converter.Write(writtenSection, compressByte, ref writtenIndex);
         }
     }
 
