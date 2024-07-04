@@ -1,6 +1,7 @@
 ﻿using PngDecoder.Exceptions;
 using PngDecoder.Extension;
 using PngDecoder.Models;
+using PngDecoder.Models.ColorReader;
 using PngDecoder.Models.Filters;
 using System.Buffers;
 using System.IO.Compression;
@@ -60,7 +61,7 @@ public class PNGDecode
             using var filteredRawStream = new ZLibStream(encodedFilteredRawData, CompressionMode.Decompress, false);
             using var filteredMutableRawStream = new MemoryStream();
             filteredRawStream.CopyTo(filteredMutableRawStream);
-            UnfilterStream(filteredMutableRawStream, ++scanlineLength);
+            UnfilterStream(filteredMutableRawStream, ,result,++scanlineLength);
         }
         finally
         {
@@ -70,11 +71,12 @@ public class PNGDecode
         return result;
     }
 
-    private void UnfilterStream(Stream filteredRawData, int scanLineLength)
+    private void UnfilterStream(Stream filteredRawData, BaseRGBColorConverter converter, byte[] result, int scanLineLength)
     {
         filteredRawData.Seek(0, SeekOrigin.Begin);
         Span<byte> currentByte = stackalloc byte[1];
         BaseFilter filter = new NonFilter(filteredRawData);
+        var writtenIndex = 0;
         while (filteredRawData.Read(currentByte) != 0)
         {
             if (filteredRawData.Position == 1 || filteredRawData.Position % scanLineLength == 1)
@@ -83,7 +85,7 @@ public class PNGDecode
                 continue;
             }
             var compressByte = filter.UnApply(currentByte[0], scanLineLength);
-
+            converter.Write(result, compressByte, ref writtenIndex);
         }
     }
 
@@ -96,6 +98,13 @@ public class PNGDecode
             3 => new AverageFilter(filteredRawData),
             4 => new PaethFilter(filteredRawData),
             _ => throw new NotImplementedException()
+        };
+
+    private static BaseRGBColorConverter GetColorConverter(IHDRData ihdr, PLTEData? plte) =>
+        ihdr.ColorType switch
+        {
+            ColorType.Palette => new PalateColorConverter(plte!.Value, ihdr),
+            _ => throw new NotSupportedException(),
         };
 
     public bool Check() =>
