@@ -15,18 +15,18 @@ internal class PalateColorConverter : BaseRGBColorConverter
 
     public override void Write(Span<byte> result, byte inputByte, ref int writeIndex)
     {
-        var bitDetails = base.BitDepthDetails(_ihdr.BitDepth);
+        var bitDetails = base.BitDepthDetails(Ihdr.BitDepth);
         if (bitDetails is { mask: not null, step: not null })
         {
             // less than 8 n
-            for (int j = bitDetails.step!.Value; j >= 0; j -= _ihdr.BitDepth)
+            for (int j = bitDetails.step!.Value; j >= 0; j -= Ihdr.BitDepth)
             {
                 byte mask = (byte)(bitDetails.mask << j);
                 byte currentBit = (byte)((inputByte & mask) >> j);
                 var colors = _data[currentBit];
                 var currentWritingIndex = writeIndex / 4m;
 
-                if (currentWritingIndex < _ihdr.Width)
+                if (currentWritingIndex < Ihdr.Width)
                 {
                     for (int i = 0; i < colors.Length; i++)
                     {
@@ -38,7 +38,7 @@ internal class PalateColorConverter : BaseRGBColorConverter
                 }
             }
         }
-        else if (_ihdr.BitDepth == 8)
+        else if (Ihdr.BitDepth == 8)
         {
             // todo add alfa logic too
             result[writeIndex] = inputByte;

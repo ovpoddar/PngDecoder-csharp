@@ -75,11 +75,11 @@ public class PNGDecode
     private void UnfilterStream(Stream filteredRawData, BaseRGBColorConverter converter, byte[] result, int scanLineLength)
     {
         filteredRawData.Seek(0, SeekOrigin.Begin);
-        Span<byte> currentByte = stackalloc byte[1];
-        BaseFilter filter = new NonFilter(filteredRawData);
         var writtenIndex = 0;
-        var writtenSection = new Span<byte>(result, 0, (int)converter._ihdr.Width);
         var currentRow = -1;
+        Span<byte> currentByte = stackalloc byte[1];
+        var writtenSection = new Span<byte>(result, 0, (int)converter.Ihdr.Width);
+        BaseFilter filter = new NonFilter(filteredRawData);
         while (filteredRawData.Read(currentByte) != 0)
         {
             if (filteredRawData.Position == 1 || filteredRawData.Position % scanLineLength == 1)
@@ -87,8 +87,8 @@ public class PNGDecode
                 currentRow++;
                 filter = GetFilter(currentByte[0], filteredRawData);
                 writtenSection = new Span<byte>(result,
-                    (int)(currentRow * converter._ihdr.Width),
-                    (int)converter._ihdr.Width);
+                    (int)(currentRow * converter.Ihdr.Width),
+                    (int)converter.Ihdr.Width);
                 continue;
             }
             var compressByte = filter.UnApply(currentByte[0], scanLineLength);

@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Ignore Spelling: Ihdr
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,11 +9,11 @@ using System.Threading.Tasks;
 namespace PngDecoder.Models.ColorReader;
 internal abstract class BaseRGBColorConverter
 {
-    public readonly IHDRData _ihdr;
+    public readonly IHDRData Ihdr;
 
     protected BaseRGBColorConverter(IHDRData ihdr)
     {
-        _ihdr = ihdr;
+        Ihdr = ihdr;
     }
     public abstract void Write(Span<byte> result, byte inputByte, ref int writeIndex);
     public (byte? step, byte? mask) BitDepthDetails(byte bitDepth)
