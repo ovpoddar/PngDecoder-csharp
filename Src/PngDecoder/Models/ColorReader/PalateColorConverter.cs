@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -8,15 +9,11 @@ namespace PngDecoder.Models.ColorReader;
 internal class PalateColorConverter : BaseRGBColorConverter
 {
     private readonly PLTEData _data;
-    private readonly IHDRData _ihdr;
 
-    public PalateColorConverter(PLTEData data, IHDRData ihdr)
-    {
+    public PalateColorConverter(PLTEData data, IHDRData ihdr) : base(ihdr) =>
         _data = data;
-        _ihdr = ihdr;
-    }
 
-    public override void Write(byte[] result, byte inputByte, ref int index)
+    public override void Write(Span<byte> result, byte inputByte, ref int writeIndex)
     {
         var bitDetails = base.BitDepthDetails(_ihdr.BitDepth);
         if (bitDetails is { mask: not null, step: not null })
@@ -26,29 +23,26 @@ internal class PalateColorConverter : BaseRGBColorConverter
             {
                 byte mask = (byte)(bitDetails.mask << j);
                 byte currentBit = (byte)((inputByte & mask) >> j);
-                var colorIndex = currentBit * 3;
-                var colors = _data[colorIndex];
-                for (int i = 0; i < colors.Length; i++)
+                var colors = _data[currentBit];
+                var currentWritingIndex = writeIndex / 4m;
+
+                if (currentWritingIndex < _ihdr.Width)
                 {
-                    /* implement this logic too
-                     * var color = GetTrueColor(palate, newPixel);
-                    if (totalWrite < width)
+                    for (int i = 0; i < colors.Length; i++)
                     {
-                        output[index] = color;
-                        current[i] = newPixel;
-                        index++;
-                    }*/
-                    // todo add alfa logic too
-                    result[index] = colors[i];
-                    index++;
+                        result[writeIndex] = colors[i];
+                        writeIndex++;
+                    }
+                    // for alpha
+                    result[writeIndex++] = 255;
                 }
             }
         }
         else if (_ihdr.BitDepth == 8)
         {
             // todo add alfa logic too
-            result[index] = inputByte;
-            index++;
+            result[writeIndex] = inputByte;
+            writeIndex++;
         }
     }
 

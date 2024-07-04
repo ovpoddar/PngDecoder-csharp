@@ -4,6 +4,7 @@ using PngDecoder.Models;
 using PngDecoder.Models.ColorReader;
 using PngDecoder.Models.Filters;
 using System.Buffers;
+using System.Diagnostics;
 using System.IO.Compression;
 
 namespace PngDecoder;
@@ -43,7 +44,7 @@ public class PNGDecode
         var headerData = new IHDRData(header);
 
         var result = new byte[headerData.Height * headerData.Width * 4];
-        var scanlineLength = headerData.GetScanLinesWidth();
+        var scanlineLength = headerData.GetScanLinesWidthWithPadding();
         var paletteData = new PLTEData?();
 
         if (headerData.ColorType == ColorType.Palette)
@@ -51,7 +52,7 @@ public class PNGDecode
             var palate = _chunks.First(a => a.Signature == PngChunkType.PLTE);
             paletteData = new PLTEData(palate);
         }
-
+        var colorConverter = GetColorConverter(headerData, paletteData);
         var data = _chunks.First(a => a.Signature == PngChunkType.IDAT);
         var raw = ArrayPool<byte>.Shared.Rent((int)data.Length);
         data.GetData(raw);
@@ -61,7 +62,7 @@ public class PNGDecode
             using var filteredRawStream = new ZLibStream(encodedFilteredRawData, CompressionMode.Decompress, false);
             using var filteredMutableRawStream = new MemoryStream();
             filteredRawStream.CopyTo(filteredMutableRawStream);
-            UnfilterStream(filteredMutableRawStream, ,result,++scanlineLength);
+            UnfilterStream(filteredMutableRawStream, colorConverter, result,++scanlineLength);
         }
         finally
         {
@@ -77,11 +78,17 @@ public class PNGDecode
         Span<byte> currentByte = stackalloc byte[1];
         BaseFilter filter = new NonFilter(filteredRawData);
         var writtenIndex = 0;
+        var writtenSection = new Span<byte>(result, 0, (int)converter._ihdr.Width);
+        var currentRow = -1;
         while (filteredRawData.Read(currentByte) != 0)
         {
             if (filteredRawData.Position == 1 || filteredRawData.Position % scanLineLength == 1)
             {
+                currentRow++;
                 filter = GetFilter(currentByte[0], filteredRawData);
+                writtenSection = new Span<byte>(result,
+                    (int)(currentRow * converter._ihdr.Width),
+                    (int)converter._ihdr.Width);
                 continue;
             }
             var compressByte = filter.UnApply(currentByte[0], scanLineLength);

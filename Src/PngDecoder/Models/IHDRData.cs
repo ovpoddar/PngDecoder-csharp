@@ -33,7 +33,7 @@ internal struct IHDRData
 
     }
 
-    public int GetScanLinesWidth()
+    public int GetScanLinesWidthWithPadding()
     {
         var length = Width * BitDepth * GetBytePerPixels;
         var count = (int)(length / 8);
@@ -42,6 +42,12 @@ internal struct IHDRData
         if (extra == 0)
             return count;
         return ++count;
+    }
+
+    public decimal GetScanLineWidthWithoutPadding()
+    {
+        decimal length = Width * BitDepth * GetBytePerPixels;
+        return length / 8m;
     }
 
     private readonly uint GetBytePerPixels => ColorType switch

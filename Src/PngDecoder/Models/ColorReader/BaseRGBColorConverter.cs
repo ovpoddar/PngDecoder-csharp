@@ -5,9 +5,15 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace PngDecoder.Models.ColorReader;
-public abstract class BaseRGBColorConverter
+internal abstract class BaseRGBColorConverter
 {
-    public abstract void Write(byte[] result, byte inputByte, ref int index);
+    public readonly IHDRData _ihdr;
+
+    protected BaseRGBColorConverter(IHDRData ihdr)
+    {
+        _ihdr = ihdr;
+    }
+    public abstract void Write(Span<byte> result, byte inputByte, ref int writeIndex);
     public (byte? step, byte? mask) BitDepthDetails(byte bitDepth)
     {
         if (bitDepth < 8)
