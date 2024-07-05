@@ -1,35 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace PngDecoder.Models.ColorReader;
-internal class PalateColorConverter : BaseRGBColorConverter
+internal class GrayScaleColorConverter : BaseRGBColorConverter
 {
-    private readonly PLTEData _data;
-
-    public PalateColorConverter(PLTEData data, IHDRData ihdr) : base(ihdr) =>
-        _data = data;
-
+    public GrayScaleColorConverter(IHDRData ihdr) : base(ihdr) { }
     public override void Write(Span<byte> result, byte inputByte, ref int writeIndex)
     {
         var bitDetails = base.BitDepthDetails();
         if (bitDetails is { mask: not null, step: not null })
         {
-            // less than 8 n
             for (int j = bitDetails.step!.Value; j >= 0; j -= Ihdr.BitDepth)
             {
                 byte mask = (byte)(bitDetails.mask << j);
                 byte currentBit = (byte)((inputByte & mask) >> j);
-                var colors = _data[currentBit];
 
                 if (writeIndex < Ihdr.Width * 4)
                 {
-                    for (int i = 0; i < colors.Length; i++)
+                    for (int i = 0; i < 3; i++)
                     {
-                        result[writeIndex] = colors[i];
+                        result[writeIndex] = currentBit;
                         writeIndex++;
                     }
                     // for alpha
@@ -39,14 +34,18 @@ internal class PalateColorConverter : BaseRGBColorConverter
         }
         else if (Ihdr.BitDepth == 8)
         {
-            if (writeIndex % 3 == 0)
+            for (int i = 0; i < 3; i++)
             {
-                result[writeIndex] = 255;
+                result[writeIndex] = inputByte;
                 writeIndex++;
             }
-            result[writeIndex] = inputByte;
+
+            result[writeIndex] = 255;
             writeIndex++;
         }
+        else // 16
+        {
+            ///no clue how its works
+        }
     }
-
 }

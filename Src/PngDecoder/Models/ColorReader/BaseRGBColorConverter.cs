@@ -16,15 +16,15 @@ internal abstract class BaseRGBColorConverter
         Ihdr = ihdr;
     }
     public abstract void Write(Span<byte> result, byte inputByte, ref int writeIndex);
-    public (byte? step, byte? mask) BitDepthDetails(byte bitDepth)
+    public (byte? step, byte? mask) BitDepthDetails()
     {
-        if (bitDepth < 8)
+        if (Ihdr.BitDepth < 8)
         {
             byte step = 1;
-            for (byte i = 0; i < bitDepth; i++)
+            for (byte i = 0; i < Ihdr.BitDepth; i++)
                 step |= (byte)(1 << i);
 
-            return ((byte)(8 - bitDepth), step);
+            return ((byte)(8 - Ihdr.BitDepth), step);
         }
         return (null, null);
     }

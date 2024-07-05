@@ -112,6 +112,7 @@ public class PNGDecode
         ihdr.ColorType switch
         {
             ColorType.Palette => new PalateColorConverter(plte!.Value, ihdr),
+            ColorType.GreyScale => new GrayScaleColorConverter(ihdr),
             _ => throw new NotSupportedException(),
         };
 
