@@ -65,7 +65,19 @@ public class PNGDecode
     private void ProcessIDATChunks(Stream raw)
         {
         foreach (var chunk in _chunks.Where(a => a.Signature == PngChunkType.IDAT))
-            raw.Write(chunk.GetData());
+        {
+            var data = ArrayPool<byte>.Shared.Rent((int)chunk.Length);
+            chunk.GetData(data);
+            try
+            {
+                raw.Write(data);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(data);
+            }
+        }
+        raw.Position = 0;
     }
 
     private void UnfilterStream(Stream filteredRawData, BaseRGBColorConverter converter, byte[] result, int scanLineLength)
