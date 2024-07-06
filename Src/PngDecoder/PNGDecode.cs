@@ -53,23 +53,19 @@ public class PNGDecode
             paletteData = new PLTEData(palate);
         }
         var colorConverter = GetColorConverter(headerData, paletteData);
-        var data = _chunks.First(a => a.Signature == PngChunkType.IDAT);
-        var raw = ArrayPool<byte>.Shared.Rent((int)data.Length);
-        data.GetData(raw);
-        try
-        {
-            using var encodedFilteredRawData = new MemoryStream(raw);
+        using var encodedFilteredRawData = new MemoryStream();
+        ProcessIDATChunks(encodedFilteredRawData);
             using var filteredRawStream = new ZLibStream(encodedFilteredRawData, CompressionMode.Decompress, false);
             using var filteredMutableRawStream = new MemoryStream();
             filteredRawStream.CopyTo(filteredMutableRawStream);
-            UnfilterStream(filteredMutableRawStream, colorConverter, result,++scanlineLength);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(raw);
+        UnfilterStream(filteredMutableRawStream, colorConverter, result, ++scanlineLength);
+        return result;
         }
 
-        return result;
+    private void ProcessIDATChunks(Stream raw)
+        {
+        foreach (var chunk in _chunks.Where(a => a.Signature == PngChunkType.IDAT))
+            raw.Write(chunk.GetData());
     }
 
     private void UnfilterStream(Stream filteredRawData, BaseRGBColorConverter converter, byte[] result, int scanLineLength)
@@ -113,6 +109,7 @@ public class PNGDecode
         {
             ColorType.Palette => new PalateColorConverter(plte!.Value, ihdr),
             ColorType.GreyScale => new GrayScaleColorConverter(ihdr),
+            ColorType.RGB => new RGBColorConverter(ihdr),
             _ => throw new NotSupportedException(),
         };
 

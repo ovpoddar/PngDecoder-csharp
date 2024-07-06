@@ -49,11 +49,11 @@ internal struct PNGChunk
         return result;
     }
 
-    public void GetData(byte[] result)
+    public void GetData(byte[] result, int offset = 0, int? count = null)
     {
         var oldPosation = _stream.Position;
         _stream.Seek(Data, SeekOrigin.Begin);
-        _stream.Read(result, 0, (int)Length);
+        _stream.Read(result, offset, count ?? (int)Length);
         _stream.Seek(oldPosation, SeekOrigin.Begin);
     }
 

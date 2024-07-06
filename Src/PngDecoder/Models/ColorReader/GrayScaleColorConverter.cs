@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-
-namespace PngDecoder.Models.ColorReader;
+﻿namespace PngDecoder.Models.ColorReader;
 internal class GrayScaleColorConverter : BaseRGBColorConverter
 {
     public GrayScaleColorConverter(IHDRData ihdr) : base(ihdr) { }

@@ -39,7 +39,7 @@ internal class PalateColorConverter : BaseRGBColorConverter
         }
         else if (Ihdr.BitDepth == 8)
         {
-            if (writeIndex % 3 == 0)
+            if (writeIndex % 4 == 3)
             {
                 result[writeIndex] = 255;
                 writeIndex++;
