@@ -55,15 +55,16 @@ public class PNGDecode
         var colorConverter = GetColorConverter(headerData, paletteData);
         using var encodedFilteredRawData = new MemoryStream();
         ProcessIDATChunks(encodedFilteredRawData);
-            using var filteredRawStream = new ZLibStream(encodedFilteredRawData, CompressionMode.Decompress, false);
-            using var filteredMutableRawStream = new MemoryStream();
-            filteredRawStream.CopyTo(filteredMutableRawStream);
+        // need my own zlib stream looks like just skipping 6 byte its second one %32 ==0
+        using var filteredRawStream = new ZLibStream(encodedFilteredRawData, CompressionMode.Decompress, false);
+        using var filteredMutableRawStream = new MemoryStream();
+        filteredRawStream.CopyTo(filteredMutableRawStream);
         UnfilterStream(filteredMutableRawStream, colorConverter, result, ++scanlineLength);
         return result;
-        }
+    }
 
     private void ProcessIDATChunks(Stream raw)
-        {
+    {
         foreach (var chunk in _chunks.Where(a => a.Signature == PngChunkType.IDAT))
         {
             var data = ArrayPool<byte>.Shared.Rent((int)chunk.Length);
@@ -94,7 +95,7 @@ public class PNGDecode
             {
                 writtenIndex = 0;
                 currentRow++;
-               filter = GetFilter(currentByte[0], filteredRawData);
+                filter = GetFilter(currentByte[0], filteredRawData);
                 writtenSection = new Span<byte>(result,
                     (int)(currentRow * converter.Ihdr.Width * 4),
                     (int)converter.Ihdr.Width * 4);
