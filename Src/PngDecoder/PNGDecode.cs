@@ -77,6 +77,7 @@ public class PNGDecode
             {
                 ArrayPool<byte>.Shared.Return(data);
             }
+            break;
         }
         raw.Position = 0;
     }
@@ -102,7 +103,7 @@ public class PNGDecode
                 continue;
             }
 
-
+            // todo:why the fuck the 16 bit getting messed up.
             var compressByte = filter.UnApply(currentByte[0], scanLineLength);
             converter.Write(writtenSection, compressByte, ref writtenIndex);
         }
