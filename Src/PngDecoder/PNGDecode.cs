@@ -95,25 +95,27 @@ public class PNGDecode
             {
                 writtenIndex = 0;
                 currentRow++;
-                filter = GetFilter(currentByte[0], filteredRawData);
+                filter = GetFilter(currentByte[0], filteredRawData, converter.Ihdr.GetPixelSizeInByte());
                 writtenSection = new Span<byte>(result,
                     (int)(currentRow * converter.Ihdr.Width * 4),
                     (int)converter.Ihdr.Width * 4);
                 continue;
             }
+
+
             var compressByte = filter.UnApply(currentByte[0], scanLineLength);
             converter.Write(writtenSection, compressByte, ref writtenIndex);
         }
     }
 
-    private static BaseFilter GetFilter(byte mode, Stream filteredRawData) =>
+    private static BaseFilter GetFilter(byte mode, Stream filteredRawData, byte pixelSize) =>
         mode switch
         {
             0 => new NonFilter(filteredRawData),
-            1 => new SubFilter(filteredRawData),
+            1 => new SubFilter(filteredRawData, pixelSize),
             2 => new UpFilter(filteredRawData),
-            3 => new AverageFilter(filteredRawData),
-            4 => new PaethFilter(filteredRawData),
+            3 => new AverageFilter(filteredRawData, pixelSize),
+            4 => new PaethFilter(filteredRawData, pixelSize),
             _ => throw new NotImplementedException()
         };
 
