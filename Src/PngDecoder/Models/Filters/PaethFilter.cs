@@ -3,14 +3,17 @@
 namespace PngDecoder.Models.Filters;
 internal class PaethFilter : BaseFilter
 {
-    public PaethFilter(Stream stream) : base(stream) { }
+    private readonly byte _pixelSize;
+
+    public PaethFilter(Stream stream, byte pixelSize) : base(stream) =>
+        _pixelSize = pixelSize;
 
     public override byte UnApply(byte current, int scanLineWidth)
     {
         current = (byte)(current + PaethCalculate(
-            GetLeftByte(scanLineWidth),
+            GetLeftByte(scanLineWidth, _pixelSize),
             GetTopByte(scanLineWidth),
-            GetTopLeftByte(scanLineWidth)));
+            GetTopLeftByte(scanLineWidth, _pixelSize)));
         return base.UnApply(current, scanLineWidth);
     }
 

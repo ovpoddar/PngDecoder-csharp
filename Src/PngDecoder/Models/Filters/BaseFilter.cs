@@ -2,6 +2,7 @@
 public class BaseFilter
 {
     private readonly Stream _stream;
+    private const byte FILTERTYPEFACTOR = 1; 
 
     public BaseFilter(Stream stream) =>
         _stream = stream;
@@ -13,16 +14,20 @@ public class BaseFilter
         return current;
     }
 
-    public byte GetLeftByte(int lineWidth)
+    public byte GetLeftByte(int lineWidth, byte pixelLength)
     {
+        // need account the bit depth
         Span<byte> result = stackalloc byte[1];
-        if (_stream.Position % lineWidth != 2)
+        var modPosation = _stream.Position % lineWidth;
+        if (modPosation > (pixelLength + FILTERTYPEFACTOR) || modPosation == 0)
         {
-            _stream.Seek(-2, SeekOrigin.Current);
+            var tempPos = _stream.Position;
+            _stream.Seek(-(pixelLength + FILTERTYPEFACTOR), SeekOrigin.Current);
             _stream.Read(result);
-            _stream.Seek(1, SeekOrigin.Current);
+            _stream.Seek(tempPos, SeekOrigin.Begin);
         }
         return result[0];
+
     }
 
     public byte GetTopByte(int lineWidth)
@@ -40,17 +45,18 @@ public class BaseFilter
         return result[0];
     }
 
-    public byte GetTopLeftByte(int lineWidth)
+    public byte GetTopLeftByte(int lineWidth, byte pixelLength)
     {
-        var topLeftIndex = _stream.Position - lineWidth - 2;
         Span<byte> result = stackalloc byte[1];
-        if (topLeftIndex >= 0 && _stream.Position % lineWidth != 2)
+        var topleftIndex = lineWidth + FILTERTYPEFACTOR + pixelLength;
+        var modPosation = (_stream.Position - lineWidth) % lineWidth;
+        if (_stream.Position > lineWidth && (modPosation > (pixelLength + FILTERTYPEFACTOR) || modPosation == 0))
         {
-            var tempCurrentIndex = _stream.Position;
 
-            _stream.Seek(topLeftIndex, SeekOrigin.Begin);
+            var tempPos = _stream.Position;
+            _stream.Seek(-(topleftIndex), SeekOrigin.Current);
             _stream.Read(result);
-            _stream.Seek(tempCurrentIndex, SeekOrigin.Begin);
+            _stream.Seek(tempPos, SeekOrigin.Begin);
         }
         return result[0];
     }

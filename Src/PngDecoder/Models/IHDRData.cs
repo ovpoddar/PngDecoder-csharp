@@ -50,7 +50,7 @@ internal struct IHDRData
         return length / 8m;
     }
 
-    private readonly uint GetBytePerPixels => ColorType switch
+    private readonly uint GetBytePerPixels => this.ColorType switch
     {
         ColorType.GreyScale => 1,
         ColorType.RGB => 3,
@@ -60,4 +60,13 @@ internal struct IHDRData
         _ => throw new Exception(),
     };
 
+    public byte GetPixelSizeInByte() => this.ColorType switch
+    {
+        ColorType.GreyScale => 1,
+        ColorType.Palette => 1,
+        ColorType.GreyScaleAndAlpha => 2,
+        ColorType.RGB => 3,
+        ColorType.RGBA => 4,
+        _ => throw new Exception()
+    };
 }

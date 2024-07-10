@@ -8,6 +8,7 @@ internal enum PngChunkType : int
     IHDR = 1380206665,
     cHRM = 1297238115,
     gAMA = 1095582055,
+    sRGB = 1111970419,
     sBIT = 1414087283,
     PLTE = 1163152464,
     bKGD = 1145523042,

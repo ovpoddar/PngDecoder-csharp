@@ -11,10 +11,9 @@ internal abstract class BaseRGBColorConverter
 {
     public readonly IHDRData Ihdr;
 
-    protected BaseRGBColorConverter(IHDRData ihdr)
-    {
+    protected BaseRGBColorConverter(IHDRData ihdr) =>
         Ihdr = ihdr;
-    }
+
     public abstract void Write(Span<byte> result, byte inputByte, ref int writeIndex);
     public (byte? step, byte? mask) BitDepthDetails()
     {
