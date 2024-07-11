@@ -38,6 +38,7 @@ internal class GrayScaleColorConverter : BaseRGBColorConverter
         else // 16
         {
             ///no clue how its works
+            /// still no  image found to test
         }
     }
 }
