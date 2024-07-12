@@ -66,7 +66,7 @@ internal struct IHDRData
         ColorType.Palette => 1,
         ColorType.GreyScaleAndAlpha => (byte)(2 * BitDepth /8),
         ColorType.RGB => (byte)(3 * BitDepth / 8),
-        ColorType.RGBA => 4,
+        ColorType.RGBA => (byte)(4 * BitDepth /8),
         _ => throw new Exception()
     };
 }
