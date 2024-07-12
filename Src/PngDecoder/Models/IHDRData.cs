@@ -35,7 +35,7 @@ internal struct IHDRData
 
     public int GetScanLinesWidthWithPadding()
     {
-        var length = Width * BitDepth * GetBytePerPixels;
+        var length = Width * BitDepth * GetBytePerPixels();
         var count = (int)(length / 8);
         var extra = length % 8;
 
@@ -46,11 +46,11 @@ internal struct IHDRData
 
     public decimal GetScanLineWidthWithoutPadding()
     {
-        decimal length = Width * BitDepth * GetBytePerPixels;
+        decimal length = Width * BitDepth * GetBytePerPixels();
         return length / 8m;
     }
 
-    private readonly uint GetBytePerPixels => this.ColorType switch
+    private readonly uint GetBytePerPixels() => this.ColorType switch
     {
         ColorType.GreyScale => 1,
         ColorType.RGB => 3,
@@ -64,7 +64,7 @@ internal struct IHDRData
     {
         ColorType.GreyScale => 1,
         ColorType.Palette => 1,
-        ColorType.GreyScaleAndAlpha => 2,
+        ColorType.GreyScaleAndAlpha => (byte)(2 * BitDepth /8),
         ColorType.RGB => (byte)(3 * BitDepth / 8),
         ColorType.RGBA => 4,
         _ => throw new Exception()

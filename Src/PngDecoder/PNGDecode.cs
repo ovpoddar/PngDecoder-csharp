@@ -103,7 +103,7 @@ public class PNGDecode
                 continue;
             }
 
-            // todo:why the fuck the 16 bit getting messed up.
+            // need to test more 16 bit
             var compressByte = filter.UnApply(currentByte[0], scanLineLength);
             converter.Write(writtenSection, compressByte, ref writtenIndex);
         }
@@ -126,6 +126,7 @@ public class PNGDecode
             ColorType.Palette => new PalateColorConverter(plte!.Value, ihdr),
             ColorType.GreyScale => new GrayScaleColorConverter(ihdr),
             ColorType.RGB => new RGBColorConverter(ihdr),
+            ColorType.GreyScaleAndAlpha => new GreyScaleAndAlphaConverter(ihdr),
             _ => throw new NotSupportedException(),
         };
 
