@@ -52,40 +52,43 @@ public class PNGDecode
             paletteData = new PLTEData(palate);
         }
         var colorConverter = GetColorConverter(headerData, paletteData);
-        using var encodedFilteredRawData = new MemoryStream();
-        ProcessIDATChunks(encodedFilteredRawData);
+        var writtenIndex = 0;
+        var currentRow = -1;
+
         // need my own zlib stream looks like just skipping 6 byte its second one %32 ==0
-        using var filteredRawStream = new ZLibStream(encodedFilteredRawData, CompressionMode.Decompress, false);
-        using var filteredMutableRawStream = new MemoryStream();
-        filteredRawStream.CopyTo(filteredMutableRawStream);
-        // TODO: need to process with loop.
-        UnfilterStream(filteredMutableRawStream, colorConverter, result);
+        foreach (var chunk in GetFilteredRawStream())
+        {
+            using var filteredMutableRawStream = new MemoryStream();
+            chunk.CopyTo(filteredMutableRawStream);
+            chunk.Dispose();
+            UnfilterStream(filteredMutableRawStream, colorConverter, result, ref writtenIndex, ref currentRow);
+        }
         return result;
     }
 
-    private void ProcessIDATChunks(Stream raw)
+    IEnumerable<ZLibStream> GetFilteredRawStream()
     {
         foreach (var chunk in _chunks.Where(a => a.Signature == PngChunkType.IDAT))
         {
             var data = ArrayPool<byte>.Shared.Rent((int)chunk.Length);
-            chunk.GetData(data);
             try
             {
-                raw.Write(data);
+                using var ms = new MemoryStream();
+                chunk.GetData(data);
+                ms.Write(data);
+                ms.Position = 0;
+                yield return new ZLibStream(ms, CompressionMode.Decompress, false);
             }
             finally
             {
                 ArrayPool<byte>.Shared.Return(data);
             }
         }
-        raw.Position = 0;
     }
 
-    private void UnfilterStream(Stream filteredRawData, BaseRGBColorConverter converter, byte[] result)
+    private void UnfilterStream(Stream filteredRawData, BaseRGBColorConverter converter, byte[] result, ref int writtenIndex, ref int currentRow)
     {
         filteredRawData.Seek(0, SeekOrigin.Begin);
-        var writtenIndex = 0;
-        var currentRow = -1; // TODO: to be stored
         Span<byte> currentByte = stackalloc byte[1];
         var writtenSection = new Span<byte>();
         var scanlineLength = converter.Ihdr.GetScanLinesWidthWithPadding() + 1;
