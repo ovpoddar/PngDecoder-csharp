@@ -44,7 +44,6 @@ public class PNGDecode
         var headerData = new IHDRData(header);
 
         var result = new byte[headerData.Height * headerData.Width * 4];
-        var scanlineLength = headerData.GetScanLinesWidthWithPadding();
         var paletteData = new PLTEData?();
 
         if (headerData.ColorType == ColorType.Palette)
@@ -59,7 +58,8 @@ public class PNGDecode
         using var filteredRawStream = new ZLibStream(encodedFilteredRawData, CompressionMode.Decompress, false);
         using var filteredMutableRawStream = new MemoryStream();
         filteredRawStream.CopyTo(filteredMutableRawStream);
-        UnfilterStream(filteredMutableRawStream, colorConverter, result, ++scanlineLength);
+        // TODO: need to process with loop.
+        UnfilterStream(filteredMutableRawStream, colorConverter, result);
         return result;
     }
 
@@ -77,22 +77,22 @@ public class PNGDecode
             {
                 ArrayPool<byte>.Shared.Return(data);
             }
-            break;
         }
         raw.Position = 0;
     }
 
-    private void UnfilterStream(Stream filteredRawData, BaseRGBColorConverter converter, byte[] result, int scanLineLength)
+    private void UnfilterStream(Stream filteredRawData, BaseRGBColorConverter converter, byte[] result)
     {
         filteredRawData.Seek(0, SeekOrigin.Begin);
         var writtenIndex = 0;
-        var currentRow = -1;
+        var currentRow = -1; // TODO: to be stored
         Span<byte> currentByte = stackalloc byte[1];
         var writtenSection = new Span<byte>();
+        var scanlineLength = converter.Ihdr.GetScanLinesWidthWithPadding() + 1;
         BaseFilter filter = new NonFilter(filteredRawData);
         while (filteredRawData.Read(currentByte) != 0)
         {
-            if (filteredRawData.Position == 1 || filteredRawData.Position % scanLineLength == 1)
+            if (filteredRawData.Position == 1 || filteredRawData.Position % scanlineLength == 1)
             {
                 writtenIndex = 0;
                 currentRow++;
@@ -102,9 +102,8 @@ public class PNGDecode
                     (int)converter.Ihdr.Width * 4);
                 continue;
             }
-
-            // need to test more 16 bit
-            var compressByte = filter.UnApply(currentByte[0], scanLineLength);
+            //TODO: can be do prcess the number requied pixels or a full pixel.
+            var compressByte = filter.UnApply(currentByte[0], scanlineLength);
             converter.Write(writtenSection, compressByte, ref writtenIndex);
         }
     }

@@ -28,19 +28,14 @@ internal class RGBColorConverter : BaseRGBColorConverter
         {
             if (_canRead)
             {
-                result[writeIndex] = inputByte;
-                writeIndex++;
-                _cnt++;
-            }
-            if (_cnt == 3)
-            {
-                result[writeIndex] = 255;
-                writeIndex++;
-                _cnt = 0;
+                result[writeIndex++] = inputByte;
+                if (writeIndex % 4 == 3)
+                {
+                    result[writeIndex++] = 255;
+                }
             }
             _canRead = !_canRead;
         }
     }
-    private byte _cnt = 0;
     private bool _canRead = true;
 }
