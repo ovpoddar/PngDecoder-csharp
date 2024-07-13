@@ -127,6 +127,7 @@ public class PNGDecode
             ColorType.GreyScale => new GrayScaleColorConverter(ihdr),
             ColorType.RGB => new RGBColorConverter(ihdr),
             ColorType.GreyScaleAndAlpha => new GreyScaleAndAlphaConverter(ihdr),
+            ColorType.RGBA => new RGBAColorConverter(ihdr),
             _ => throw new NotSupportedException(),
         };
 

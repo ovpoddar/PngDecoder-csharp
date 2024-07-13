@@ -62,11 +62,11 @@ internal struct IHDRData
 
     public byte GetPixelSizeInByte() => this.ColorType switch
     {
-        ColorType.GreyScale => 1,
+        ColorType.GreyScale => (byte)Math.Round(1d * BitDepth / 8, MidpointRounding.ToPositiveInfinity),
         ColorType.Palette => 1,
-        ColorType.GreyScaleAndAlpha => (byte)(2 * BitDepth /8),
+        ColorType.GreyScaleAndAlpha => (byte)(2 * BitDepth / 8),
         ColorType.RGB => (byte)(3 * BitDepth / 8),
-        ColorType.RGBA => (byte)(4 * BitDepth /8),
+        ColorType.RGBA => (byte)(4 * BitDepth / 8),
         _ => throw new Exception()
     };
 }
