@@ -56,16 +56,16 @@ public class PNGDecode
 
         try
         {
-        var writtenIndex = 0;
-        var currentRow = -1;
+            var writtenIndex = 0;
+            var currentRow = -1;
             var result = new byte[headerData.Height * headerData.Width * 4];
-        foreach (var chunk in GetFilteredRawStream())
-        {
-            using var filteredMutableRawStream = new MemoryStream();
-            chunk.CopyTo(filteredMutableRawStream);
-            chunk.Dispose();
-            UnfilterStream(filteredMutableRawStream, colorConverter, result, ref writtenIndex, ref currentRow);
-        }
+            foreach (var chunk in GetFilteredRawStream())
+            {
+                using var filteredMutableRawStream = new MemoryStream();
+                chunk.CopyTo(filteredMutableRawStream);
+                chunk.Dispose();
+                UnfilterStream(filteredMutableRawStream, colorConverter, result, ref writtenIndex, ref currentRow);
+            }
             return result;
         }
         catch
@@ -77,8 +77,8 @@ public class PNGDecode
             using var filteredMutableRawStream = new MemoryStream();
             rawstream.CopyTo(filteredMutableRawStream);
             UnfilterStream(filteredMutableRawStream, colorConverter, result, ref writtenIndex, ref currentRow);
-        return result;
-    }
+            return result;
+        }
 
     }
 
