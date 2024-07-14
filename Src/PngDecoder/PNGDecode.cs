@@ -37,13 +37,14 @@ public class PNGDecode
         //check essentials
         // IEND, IDAT, IHDR
     }
+    public int Height { get => (int)new IHDRData(_chunks.First(a => a.Signature == PngChunkType.IHDR)).Height; }
+    public int width { get => (int)new IHDRData(_chunks.First(a => a.Signature == PngChunkType.IHDR)).Width; }
 
     public byte[] DecodeImageData()
     {
         var header = _chunks.First(a => a.Signature == PngChunkType.IHDR);
         var headerData = new IHDRData(header);
 
-        var result = new byte[headerData.Height * headerData.Width * 4];
         var paletteData = new PLTEData?();
 
         if (headerData.ColorType == ColorType.Palette)
@@ -52,10 +53,12 @@ public class PNGDecode
             paletteData = new PLTEData(palate);
         }
         var colorConverter = GetColorConverter(headerData, paletteData);
+
+        try
+        {
         var writtenIndex = 0;
         var currentRow = -1;
-
-        // need my own zlib stream looks like just skipping 6 byte its second one %32 ==0
+            var result = new byte[headerData.Height * headerData.Width * 4];
         foreach (var chunk in GetFilteredRawStream())
         {
             using var filteredMutableRawStream = new MemoryStream();
@@ -63,8 +66,42 @@ public class PNGDecode
             chunk.Dispose();
             UnfilterStream(filteredMutableRawStream, colorConverter, result, ref writtenIndex, ref currentRow);
         }
+            return result;
+        }
+        catch
+        {
+            var writtenIndex = 0;
+            var currentRow = -1;
+            var result = new byte[headerData.Height * headerData.Width * 4];
+            using var rawstream = GetFilteredRawStream2();
+            using var filteredMutableRawStream = new MemoryStream();
+            rawstream.CopyTo(filteredMutableRawStream);
+            UnfilterStream(filteredMutableRawStream, colorConverter, result, ref writtenIndex, ref currentRow);
         return result;
     }
+
+    }
+
+    ZLibStream GetFilteredRawStream2()
+    {
+        var result = new MemoryStream();
+        foreach (var chunk in _chunks.Where(a => a.Signature == PngChunkType.IDAT))
+        {
+            var data = ArrayPool<byte>.Shared.Rent((int)chunk.Length);
+            try
+            {
+                chunk.GetData(data);
+                result.Write(data);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(data);
+            }
+        }
+        result.Position = 0;
+        return new ZLibStream(result, CompressionMode.Decompress, false);
+    }
+
 
     IEnumerable<ZLibStream> GetFilteredRawStream()
     {
@@ -132,8 +169,5 @@ public class PNGDecode
             ColorType.RGBA => new RGBAColorConverter(ihdr),
             _ => throw new NotSupportedException(),
         };
-
-    public bool Check() =>
-        _chunks.Any();
 
 }
