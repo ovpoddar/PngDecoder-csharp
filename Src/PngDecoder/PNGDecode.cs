@@ -54,22 +54,6 @@ public class PNGDecode
         }
         var colorConverter = GetColorConverter(headerData, paletteData);
 
-        try
-        {
-            var writtenIndex = 0;
-            var currentRow = -1;
-            var result = new byte[headerData.Height * headerData.Width * 4];
-            foreach (var chunk in GetFilteredRawStream())
-            {
-                using var filteredMutableRawStream = new MemoryStream();
-                chunk.CopyTo(filteredMutableRawStream);
-                chunk.Dispose();
-                UnfilterStream(filteredMutableRawStream, colorConverter, result, ref writtenIndex, ref currentRow);
-            }
-            return result;
-        }
-        catch
-        {
             var writtenIndex = 0;
             var currentRow = -1;
             var result = new byte[headerData.Height * headerData.Width * 4];
@@ -79,8 +63,6 @@ public class PNGDecode
             UnfilterStream(filteredMutableRawStream, colorConverter, result, ref writtenIndex, ref currentRow);
             return result;
         }
-
-    }
 
     ZLibStream GetFilteredRawStream2()
     {
@@ -102,26 +84,6 @@ public class PNGDecode
         return new ZLibStream(result, CompressionMode.Decompress, false);
     }
 
-
-    IEnumerable<ZLibStream> GetFilteredRawStream()
-    {
-        foreach (var chunk in _chunks.Where(a => a.Signature == PngChunkType.IDAT))
-        {
-            var data = ArrayPool<byte>.Shared.Rent((int)chunk.Length);
-            try
-            {
-                using var ms = new MemoryStream();
-                chunk.GetData(data);
-                ms.Write(data);
-                ms.Position = 0;
-                yield return new ZLibStream(ms, CompressionMode.Decompress, false);
-            }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(data);
-            }
-        }
-    }
 
     private void UnfilterStream(Stream filteredRawData, BaseRGBColorConverter converter, byte[] result, ref int writtenIndex, ref int currentRow)
     {
