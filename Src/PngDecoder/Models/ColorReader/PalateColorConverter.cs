@@ -15,7 +15,7 @@ internal class PalateColorConverter : BaseRGBColorConverter
 
     public override void Write(Span<byte> result, byte inputByte, ref int writeIndex)
     {
-        var bitDetails = base.BitDepthDetails();
+        var bitDetails = base.BitDepthDetailsForPalated();
         if (bitDetails is { mask: not null, step: not null })
         {
             // less than 8 n
@@ -44,7 +44,11 @@ internal class PalateColorConverter : BaseRGBColorConverter
                 result[writeIndex] = 255;
                 writeIndex++;
             }
-            result[writeIndex] = inputByte;
+            result[writeIndex] = _data[inputByte][0];
+            writeIndex++;
+            result[writeIndex] = _data[inputByte][1];
+            writeIndex++;
+            result[writeIndex] = _data[inputByte][2];
             writeIndex++;
         }
     }

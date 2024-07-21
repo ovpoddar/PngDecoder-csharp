@@ -15,7 +15,7 @@ internal abstract class BaseRGBColorConverter
         Ihdr = ihdr;
 
     public abstract void Write(Span<byte> result, byte inputByte, ref int writeIndex);
-    public (byte? step, byte? mask) BitDepthDetails()
+    public (byte? step, byte? mask) BitDepthDetailsForPalated()
     {
         if (Ihdr.BitDepth < 8)
         {
@@ -26,5 +26,14 @@ internal abstract class BaseRGBColorConverter
             return ((byte)(8 - Ihdr.BitDepth), step);
         }
         return (null, null);
+    }
+
+    public (byte? mask, byte? bit, byte? map) BitDepthDetailsForGrayScale()
+    {
+        if (Ihdr.BitDepth < 8)
+        {
+            return ((byte)(0xFF >> Ihdr.BitDepth), Ihdr.BitDepth, (byte)((1 << Ihdr.BitDepth) - 1));
+        }
+        return (null, null, null);
     }
 }

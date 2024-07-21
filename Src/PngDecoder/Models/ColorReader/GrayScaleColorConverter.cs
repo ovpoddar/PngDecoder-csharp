@@ -4,14 +4,12 @@ internal class GrayScaleColorConverter : BaseRGBColorConverter
     public GrayScaleColorConverter(IHDRData ihdr) : base(ihdr) { }
     public override void Write(Span<byte> result, byte inputByte, ref int writeIndex)
     {
-        var bitDetails = base.BitDepthDetails();
-        if (bitDetails is { mask: not null, step: not null })
+        var bitDetails = base.BitDepthDetailsForGrayScale();
+        if (bitDetails is { mask: not null, bit: not null, map: not null })
         {
-            for (int j = bitDetails.step!.Value; j >= 0; j -= Ihdr.BitDepth)
+            for (int j = 0; j < 8; j += bitDetails.bit!.Value)
             {
-                byte mask = (byte)(bitDetails.mask << j);
-                byte currentBit = (byte)((inputByte & mask) >> j);
-
+                byte currentBit = (byte)((byte)(((inputByte) >> (8 - bitDetails.bit - j)) & bitDetails.mask) * (255 / bitDetails.map));
                 if (writeIndex < Ihdr.Width * 4)
                 {
                     for (int i = 0; i < 3; i++)
