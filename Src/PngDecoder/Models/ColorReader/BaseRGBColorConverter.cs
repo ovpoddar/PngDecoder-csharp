@@ -32,7 +32,7 @@ internal abstract class BaseRGBColorConverter
     {
         if (Ihdr.BitDepth < 8)
         {
-            return ((byte)(0xFF >> Ihdr.BitDepth), Ihdr.BitDepth, (byte)((1 << Ihdr.BitDepth) - 1));
+            return ((byte)(0xFF >> (8 - Ihdr.BitDepth)), Ihdr.BitDepth, (byte)((1 << Ihdr.BitDepth) - 1));
         }
         return (null, null, null);
     }
