@@ -26,7 +26,7 @@ public class PNGDecode
         if (!GenericHelper.Equal(signature, headerSignature))
             throw new SignatureException(signature.ToArray());
 
-        while (true || _fileStream.Position != _fileStream.Length)
+        while (_fileStream.Position < _fileStream.Length)
         {
             var chunk = new PNGChunk(_fileStream);
             _chunks.Add(chunk);
