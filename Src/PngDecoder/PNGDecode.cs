@@ -64,7 +64,7 @@ public class PNGDecode
             return result;
         }
 
-    ZLibStream GetFilteredRawStream2()
+    // TODO write own ZLib to minimize foot-print even more
     {
         var result = new MemoryStream();
         foreach (var chunk in _chunks.Where(a => a.Signature == PngChunkType.IDAT))
@@ -73,7 +73,7 @@ public class PNGDecode
             try
             {
                 chunk.GetData(data);
-                result.Write(data);
+                result.Write(data, 0, (int)chunk.Length);
             }
             finally
             {
