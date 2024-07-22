@@ -25,5 +25,6 @@ internal enum PngChunkType : int
     gIFg = 1732659559,
     gIFt = 1950763367,
     gIFx = 2017872231,
-    IEND = 1145980233
+    IEND = 1145980233,
+    iTXt = 1951945833
 }
