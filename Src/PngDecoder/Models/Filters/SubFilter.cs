@@ -1,14 +1,21 @@
-﻿namespace PngDecoder.Models.Filters;
-internal class SubFilter : BaseFilter
+﻿
+
+namespace PngDecoder.Models.Filters;
+
+internal class SubFilter : BasePNGFilter
 {
-    private readonly byte _pixelSize;
-
-    public SubFilter(Stream stream, byte pixelSize) : base(stream) =>
-        _pixelSize = pixelSize;
-
-    public override byte UnApply(byte current, int scanLineWidth)
+    public SubFilter(Stream stream) : base(stream)
     {
-        current = (byte)(GetLeftByte(scanLineWidth, _pixelSize) + current);
-        return base.UnApply(current, scanLineWidth);
+    }
+
+    internal override Span<byte> UnApply(Span<byte> currentPixel, int scanlineWidth)
+    {
+        var pixelLength = currentPixel.Length;
+        Span<byte> leftPixel = stackalloc byte[pixelLength];
+        base.GetLeftPixel(leftPixel, scanlineWidth);
+        for (byte i = 0; i < currentPixel.Length; i++)
+            currentPixel[i] =(byte)(leftPixel[i] + currentPixel[i]);
+        
+        return base.UnApply(currentPixel, scanlineWidth);
     }
 }

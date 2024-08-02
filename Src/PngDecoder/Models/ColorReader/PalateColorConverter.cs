@@ -1,56 +1,54 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 
 namespace PngDecoder.Models.ColorReader;
 internal class PalateColorConverter : BaseRGBColorConverter
 {
-    private readonly PLTEData _data;
+    private readonly PLTEData _palate;
 
-    public PalateColorConverter(PLTEData data, IHDRData ihdr) : base(ihdr) =>
-        _data = data;
+    public PalateColorConverter(PLTEData palate, IHDRData headerData) : base(headerData) =>
+        _palate = palate;
 
-    public override void Write(Span<byte> result, byte inputByte, ref int writeIndex)
+    internal override void Write(Span<byte> result,
+        Span<byte> currentByte, 
+        ref int writingIndex)
     {
         var bitDetails = base.BitDepthDetailsForPalated();
         if (bitDetails is { mask: not null, step: not null })
         {
+            Debug.Assert(currentByte.Length == 1);
             // less than 8 n
-            for (int j = bitDetails.step!.Value; j >= 0; j -= Ihdr.BitDepth)
+            for (int j = bitDetails.step!.Value; j >= 0; j -= HeaderData.BitDepth)
             {
                 byte mask = (byte)(bitDetails.mask << j);
-                byte currentBit = (byte)((inputByte & mask) >> j);
-                var colors = _data[currentBit];
+                byte currentBit = (byte)((currentByte[0] & mask) >> j);
+                var colors = _palate[currentBit];
 
-                if (writeIndex < Ihdr.Width * 4)
+                if (writingIndex < HeaderData.Width * 4)
                 {
                     for (int i = 0; i < colors.Length; i++)
                     {
-                        result[writeIndex] = colors[i];
-                        writeIndex++;
+                        result[writingIndex] = colors[i];
+                        writingIndex++;
                     }
                     // for alpha
-                    result[writeIndex++] = 255;
+                    result[writingIndex++] = 255;
                 }
             }
         }
-        else if (Ihdr.BitDepth == 8)
+        else if (HeaderData.BitDepth == 8)
         {
-            if (writeIndex % 4 == 3)
+            Debug.Assert(currentByte.Length == 1);
+            if (writingIndex % 4 == 3)
             {
-                result[writeIndex] = 255;
-                writeIndex++;
+                result[writingIndex] = 255;
+                writingIndex++;
             }
-            result[writeIndex] = _data[inputByte][0];
-            writeIndex++;
-            result[writeIndex] = _data[inputByte][1];
-            writeIndex++;
-            result[writeIndex] = _data[inputByte][2];
-            writeIndex++;
+            result[writingIndex] = _palate[currentByte[0]][0];
+            writingIndex++;
+            result[writingIndex] = _palate[currentByte[0]][1];
+            writingIndex++;
+            result[writingIndex] = _palate[currentByte[0]][2];
+            writingIndex++;
         }
     }
-
 }

@@ -1,5 +1,10 @@
-﻿namespace PngDecoder.Models.Filters;
-internal class NonFilter : BaseFilter
+﻿
+
+namespace PngDecoder.Models.Filters;
+
+internal class NonFilter : BasePNGFilter
 {
-    public NonFilter(Stream stream) : base(stream) { }
+    public NonFilter(Stream stream) : base(stream)
+    {
+    }
 }

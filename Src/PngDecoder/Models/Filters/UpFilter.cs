@@ -1,11 +1,21 @@
-﻿namespace PngDecoder.Models.Filters;
-internal class UpFilter : BaseFilter
-{
-    public UpFilter(Stream stream) : base(stream) { }
+﻿
 
-    public override byte UnApply(byte current, int scanLineWidth)
+namespace PngDecoder.Models.Filters;
+
+internal class UpFilter : BasePNGFilter
+{
+    public UpFilter(Stream stream) : base(stream)
     {
-        current = (byte)(GetTopByte(scanLineWidth) + current);
-        return base.UnApply(current, scanLineWidth);
+    }
+
+    internal override Span<byte> UnApply(Span<byte> currentPixel, int scanlineWidth)
+    {
+        var pixelLength = currentPixel.Length;
+        Span<byte> topPixel = stackalloc byte[pixelLength];
+        base.GetTopPixel(topPixel, scanlineWidth);
+        for (byte i = 0; i < currentPixel.Length; i++)
+            currentPixel[i] = (byte)(topPixel[i] + currentPixel[i]);
+
+        return base.UnApply(currentPixel, scanlineWidth);
     }
 }

@@ -3,7 +3,9 @@ using PngDecoder.Extension;
 using PngDecoder.Models;
 using PngDecoder.Models.ColorReader;
 using PngDecoder.Models.Filters;
+using System;
 using System.Buffers;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.IO.Compression;
 
@@ -52,17 +54,62 @@ public class PNGDecode
             var palate = _chunks.First(a => a.Signature == PngChunkType.PLTE);
             paletteData = new PLTEData(palate);
         }
-        var colorConverter = GetColorConverter(headerData, paletteData);
+        var writingIndex = 0;
+        var result = new byte[headerData.Height * headerData.Width * 4];
+        using var rawstream = GetFilteredRawStream2();
+        using var filteredMutableRawStream = new MemoryStream();
+        rawstream.CopyTo(filteredMutableRawStream);
 
-            var writtenIndex = 0;
-            var currentRow = -1;
-            var result = new byte[headerData.Height * headerData.Width * 4];
-            using var rawstream = GetFilteredRawStream2();
-            using var filteredMutableRawStream = new MemoryStream();
-            rawstream.CopyTo(filteredMutableRawStream);
-            UnfilterStream(filteredMutableRawStream, colorConverter, result, ref writtenIndex, ref currentRow);
-            return result;
+        BaseRGBColorConverter colorConverter = GetPixelColorDecoder(ref headerData, ref paletteData);
+        DecodeZLibStream(filteredMutableRawStream, ref headerData, result, ref writingIndex, colorConverter);
+        return result;
+    }
+
+    private void DecodeZLibStream(MemoryStream filteredMutableRawStream,
+        ref IHDRData headerData, 
+        byte[] result,
+        ref int writingIndex,
+        BaseRGBColorConverter colorConverter)
+    {
+        filteredMutableRawStream.Position = 0;
+        var scanline = headerData.GetScanLinesWidthWithPadding();
+        BasePNGFilter? currentFilter = null;
+        var writtenSection = new Span<byte>();
+        var currentRow = 0;
+        while (filteredMutableRawStream.Length > filteredMutableRawStream.Position)
+        {
+            if (filteredMutableRawStream.Position % scanline == 0)
+            {
+                // Filter
+                currentFilter = GetFilter(filteredMutableRawStream);
+                writtenSection = new Span<byte>(result,
+                    (int)(currentRow * headerData.Width * 4),
+                    (int)headerData.Width * 4);
+                currentRow++;
+                writingIndex = 0;
+            }
+            else
+            {
+                ReadImage(filteredMutableRawStream,
+                    ref currentFilter!,
+                    ref headerData, 
+                    ref writingIndex, 
+                    colorConverter,
+                    writtenSection);
+            }
         }
+    }
+
+    private BaseRGBColorConverter GetPixelColorDecoder(ref IHDRData headerData, ref PLTEData? paletteData) =>
+        headerData.ColorType switch
+        {
+            ColorType.Palette => new PalateColorConverter(paletteData!.Value, headerData),
+            //ColorType.GreyScale => new GrayScaleColorConverter(ihdr),
+            //ColorType.RGB => new RGBColorConverter(ihdr),
+            //ColorType.GreyScaleAndAlpha => new GreyScaleAndAlphaConverter(ihdr),
+            //ColorType.RGBA => new RGBAColorConverter(ihdr),
+            _ => throw new NotSupportedException(),
+        };
 
     // TODO write own ZLib to minimize foot-print even more
     ZLibStream GetFilteredRawStream2()
@@ -86,51 +133,39 @@ public class PNGDecode
     }
 
 
-    private void UnfilterStream(Stream filteredRawData, BaseRGBColorConverter converter, byte[] result, ref int writtenIndex, ref int currentRow)
+    BasePNGFilter GetFilter(Stream stream)
     {
-        filteredRawData.Seek(0, SeekOrigin.Begin);
         Span<byte> currentByte = stackalloc byte[1];
-        var writtenSection = new Span<byte>();
-        var scanlineLength = converter.Ihdr.GetScanLinesWidthWithPadding() + 1;
-        BaseFilter filter = new NonFilter(filteredRawData);
-        while (filteredRawData.Read(currentByte) != 0)
+        var totalRead = stream.Read(currentByte);
+#if DEBUG
+        if (totalRead != 1) throw new Exception("Big issue");
+#endif
+        return currentByte[0] switch
         {
-            if (filteredRawData.Position == 1 || filteredRawData.Position % scanlineLength == 1)
-            {
-                writtenIndex = 0;
-                currentRow++;
-                filter = GetFilter(currentByte[0], filteredRawData, converter.Ihdr.GetPixelSizeInByte());
-                writtenSection = new Span<byte>(result,
-                    (int)(currentRow * converter.Ihdr.Width * 4),
-                    (int)converter.Ihdr.Width * 4);
-                continue;
-            }
-            //TODO: can be do prcess the number requied pixels or a full pixel.
-            var compressByte = filter.UnApply(currentByte[0], scanlineLength);
-            converter.Write(writtenSection, compressByte, ref writtenIndex);
-        }
-    }
-
-    private static BaseFilter GetFilter(byte mode, Stream filteredRawData, byte pixelSize) =>
-        mode switch
-        {
-            0 => new NonFilter(filteredRawData),
-            1 => new SubFilter(filteredRawData, pixelSize),
-            2 => new UpFilter(filteredRawData),
-            3 => new AverageFilter(filteredRawData, pixelSize),
-            4 => new PaethFilter(filteredRawData, pixelSize),
+            0 => new NonFilter(stream),
+            1 => new SubFilter(stream),
+            2 => new UpFilter(stream),
+            3 => new AverageFilter(stream),
+            4 => new PaethFilter(stream),
             _ => throw new NotImplementedException()
         };
+    }
 
-    private static BaseRGBColorConverter GetColorConverter(IHDRData ihdr, PLTEData? plte) =>
-        ihdr.ColorType switch
-        {
-            ColorType.Palette => new PalateColorConverter(plte!.Value, ihdr),
-            ColorType.GreyScale => new GrayScaleColorConverter(ihdr),
-            ColorType.RGB => new RGBColorConverter(ihdr),
-            ColorType.GreyScaleAndAlpha => new GreyScaleAndAlphaConverter(ihdr),
-            ColorType.RGBA => new RGBAColorConverter(ihdr),
-            _ => throw new NotSupportedException(),
-        };
-
+    void ReadImage(Stream stream, 
+        ref BasePNGFilter currentFilter, 
+        ref IHDRData iHDR, 
+        ref int writingIndex, 
+        BaseRGBColorConverter colorConverter,
+        Span<byte> result)
+    {
+        Span<byte> currentByte = iHDR.BitDepth > 8
+            ? stackalloc byte[1]
+            : stackalloc byte[iHDR.GetPixelSizeInByte()];
+        var totalRead = stream.Read(currentByte);
+#if DEBUG
+        if (totalRead != currentByte.Length) throw new Exception("Big issue");
+#endif
+        currentByte = currentFilter.UnApply(currentByte, iHDR.GetScanLinesWidthWithPadding());
+        colorConverter.Write(result, currentByte, ref writingIndex);
+    }
 }

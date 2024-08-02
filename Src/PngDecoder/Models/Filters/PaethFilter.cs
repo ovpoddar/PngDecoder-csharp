@@ -1,33 +1,43 @@
-﻿// Ignore Spelling: Paeth
+﻿
 
 namespace PngDecoder.Models.Filters;
-internal class PaethFilter : BaseFilter
+
+internal class PaethFilter : BasePNGFilter
 {
-    private readonly byte _pixelSize;
-
-    public PaethFilter(Stream stream, byte pixelSize) : base(stream) =>
-        _pixelSize = pixelSize;
-
-    public override byte UnApply(byte current, int scanLineWidth)
+    public PaethFilter(Stream stream) : base(stream)
     {
-        current = (byte)(current + PaethCalculate(
-            GetLeftByte(scanLineWidth, _pixelSize),
-            GetTopByte(scanLineWidth),
-            GetTopLeftByte(scanLineWidth, _pixelSize)));
-        return base.UnApply(current, scanLineWidth);
     }
 
-    private static byte PaethCalculate(byte left, byte top, byte upperLeft)
+    internal override Span<byte> UnApply(Span<byte> currentPixel, int scanlineWidth)
     {
-        var p = left + top - upperLeft;
+        var pixelLength = currentPixel.Length;
+
+        Span<byte> leftPixel = stackalloc byte[pixelLength];
+        base.GetLeftPixel(leftPixel, scanlineWidth);
+
+        Span<byte> topLeftPixel = stackalloc byte[pixelLength];
+        base.GetTopLeftPixel(topLeftPixel, scanlineWidth);
+
+        Span<byte> topPixel = stackalloc byte[pixelLength];
+        base.GetLeftPixel(topPixel, scanlineWidth);
+
+        for (byte i = 0; i < currentPixel.Length; i++)
+            currentPixel[i] = (byte)(PaethCalculate(leftPixel[i], topPixel[i], topLeftPixel[i]) + currentPixel[i]);
+
+        return base.UnApply(currentPixel, scanlineWidth);
+    }
+
+    static byte PaethCalculate(byte left, byte top, byte topLeft)
+    {
+        var p = left + top - topLeft;
         var pa = Math.Abs(p - left);
         var pb = Math.Abs(p - top);
-        var pc = Math.Abs(p - upperLeft);
+        var pc = Math.Abs(p - topLeft);
         if (pa <= pb && pa <= pc)
             return left;
         else if (pb <= pc)
             return top;
         else
-            return upperLeft;
+            return topLeft;
     }
 }
