@@ -104,8 +104,8 @@ public class PNGDecode
         headerData.ColorType switch
         {
             ColorType.Palette => new PalateColorConverter(paletteData!.Value, headerData),
-            //ColorType.GreyScale => new GrayScaleColorConverter(ihdr),
-            //ColorType.RGB => new RGBColorConverter(ihdr),
+            ColorType.GreyScale => new GrayScaleColorConverter(headerData),
+            ColorType.RGB => new RGBColorConverter(headerData),
             //ColorType.GreyScaleAndAlpha => new GreyScaleAndAlphaConverter(ihdr),
             //ColorType.RGBA => new RGBAColorConverter(ihdr),
             _ => throw new NotSupportedException(),
@@ -158,7 +158,7 @@ public class PNGDecode
         BaseRGBColorConverter colorConverter,
         Span<byte> result)
     {
-        Span<byte> currentByte = iHDR.BitDepth > 8
+        Span<byte> currentByte = iHDR.BitDepth < 8
             ? stackalloc byte[1]
             : stackalloc byte[iHDR.GetPixelSizeInByte()];
         var totalRead = stream.Read(currentByte);

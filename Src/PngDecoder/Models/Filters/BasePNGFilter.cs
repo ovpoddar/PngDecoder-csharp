@@ -20,19 +20,6 @@ public class BasePNGFilter
         return currentPixel;
     }
 
-    public void GetLeftPixel(Span<byte> result, int scanLineWidth)
-    {
-        var modPosation = _stream.Position % scanLineWidth;
-        var pixelLength = result.Length;
-        if (modPosation <= pixelLength + 1 && modPosation > 0)
-            return;
-
-        var tempPosation = _stream.Position;
-        _stream.Seek(-pixelLength, SeekOrigin.Current);
-        _stream.Read(result);
-        _stream.Seek(tempPosation, SeekOrigin.Begin);
-    }
-
     public void GetTopPixel(Span<byte> result, int scanLineWidth)
     {
         // (scanLineWidth + 1) for next account next filter
@@ -42,17 +29,18 @@ public class BasePNGFilter
         var tempPosation = _stream.Position;
         _stream.Seek(-(result.Length + scanLineWidth), SeekOrigin.Current);
         _stream.Read(result);
-        _stream.Seek(tempPosation, SeekOrigin.Begin);
+        _stream.Position = tempPosation;
     }
    
     public void GetTopLeftPixel(Span<byte> result, int scanLineWidth)
     {
         var currentPosition = _stream.Position;
         var pixelLength = result.Length;
-        if (currentPosition <= scanLineWidth + 1 + pixelLength)
+        var modPosation = _stream.Position % scanLineWidth;
+        if (modPosation <= pixelLength + 1 && modPosation > 0 || currentPosition <= (scanLineWidth + 1))
             return;
 
-        _stream.Seek(currentPosition - (2 * pixelLength + scanLineWidth), SeekOrigin.Begin);
+        _stream.Seek(-((2 * pixelLength) + scanLineWidth), SeekOrigin.Current);
         _stream.Read(result);
         _stream.Position = currentPosition;
     }
