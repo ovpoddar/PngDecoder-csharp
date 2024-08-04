@@ -15,26 +15,18 @@ internal class RGBAColorConverter : BaseRGBColorConverter
         if (base.HeaderData.BitDepth == 8)
         {
             Debug.Assert(currentByte.Length == 4);
-            result[writingIndex] = currentByte[0];
-            writingIndex++;
-            result[writingIndex] = currentByte[1];
-            writingIndex++;
-            result[writingIndex] = currentByte[2];
-            writingIndex++;
-            result[writingIndex] = currentByte[3];
-            writingIndex++;
+            result[writingIndex++] = currentByte[0];
+            result[writingIndex++] = currentByte[1];
+            result[writingIndex++] = currentByte[2];
+            result[writingIndex++] = currentByte[3];
         }
         else // 16
         {
             Debug.Assert(currentByte.Length == 8);
-            result[writingIndex] = currentByte[0];
-            writingIndex++;
-            result[writingIndex] = currentByte[2];
-            writingIndex++;
-            result[writingIndex] = currentByte[4];
-            writingIndex++;
-            result[writingIndex] = currentByte[6];
-            writingIndex++;
+            result[writingIndex++] = currentByte[0];
+            result[writingIndex++] = currentByte[2];
+            result[writingIndex++] = currentByte[4];
+            result[writingIndex++] = currentByte[6];
         }
     }
 }

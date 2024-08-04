@@ -27,8 +27,7 @@ internal class PalateColorConverter : BaseRGBColorConverter
                 {
                     for (int i = 0; i < colors.Length; i++)
                     {
-                        result[writingIndex] = colors[i];
-                        writingIndex++;
+                        result[writingIndex++] = colors[i];
                     }
                     // for alpha
                     result[writingIndex++] = 255;
@@ -38,17 +37,10 @@ internal class PalateColorConverter : BaseRGBColorConverter
         else if (HeaderData.BitDepth == 8)
         {
             Debug.Assert(currentByte.Length == 1);
-            if (writingIndex % 4 == 3)
-            {
-                result[writingIndex] = 255;
-                writingIndex++;
-            }
-            result[writingIndex] = _palate[currentByte[0]][0];
-            writingIndex++;
-            result[writingIndex] = _palate[currentByte[0]][1];
-            writingIndex++;
-            result[writingIndex] = _palate[currentByte[0]][2];
-            writingIndex++;
+            result[writingIndex++] = _palate[currentByte[0]][0];
+            result[writingIndex++] = _palate[currentByte[0]][1];
+            result[writingIndex++] = _palate[currentByte[0]][2];
+            result[writingIndex++] = 255;
         }
     }
 }

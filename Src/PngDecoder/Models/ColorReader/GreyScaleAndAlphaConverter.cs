@@ -16,28 +16,20 @@ internal class GreyScaleAndAlphaConverter : BaseRGBColorConverter
         {
             Debug.Assert(currentByte.Length == 2);
 
-            result[writingIndex] = currentByte[0];
-            writingIndex++;
-            result[writingIndex] = currentByte[0];
-            writingIndex++;
-            result[writingIndex] = currentByte[0];
-            writingIndex++;
-            result[writingIndex] = currentByte[1];
-            writingIndex++;
+            result[writingIndex++] = currentByte[0];
+            result[writingIndex++] = currentByte[0];
+            result[writingIndex++] = currentByte[0];
+            result[writingIndex++] = currentByte[1];
 
         }
         else // 16
         {
             Debug.Assert(currentByte.Length == 4);
 
-            result[writingIndex] = currentByte[0];
-            writingIndex++;
-            result[writingIndex] = currentByte[0];
-            writingIndex++;
-            result[writingIndex] = currentByte[0];
-            writingIndex++;
-            result[writingIndex] = currentByte[2];
-            writingIndex++;
+            result[writingIndex++] = currentByte[0];
+            result[writingIndex++] = currentByte[0];
+            result[writingIndex++] = currentByte[0];
+            result[writingIndex++] = currentByte[2];
         }
     }
 }

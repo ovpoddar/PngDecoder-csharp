@@ -23,8 +23,7 @@ internal class GrayScaleColorConverter : BaseRGBColorConverter
                 {
                     for (int i = 0; i < 3; i++)
                     {
-                        result[writingIndex] = currentBit;
-                        writingIndex++;
+                        result[writingIndex++] = currentBit;
                     }
                     // for alpha
                     result[writingIndex++] = 255;
@@ -36,23 +35,19 @@ internal class GrayScaleColorConverter : BaseRGBColorConverter
             Debug.Assert(currentByte.Length == 1);
             for (int i = 0; i < 3; i++)
             {
-                result[writingIndex] = currentByte[0];
-                writingIndex++;
+                result[writingIndex++] = currentByte[0];
             }
 
-            result[writingIndex] = 255;
-            writingIndex++;
+            result[writingIndex++] = 255;
         }
         else // 16
         {
             Debug.Assert(currentByte.Length == 2);
             for (int i = 0; i < 3; i++)
             {
-                result[writingIndex] = currentByte[0];
-                writingIndex++;
+                result[writingIndex++] = currentByte[0];
             }
-            result[writingIndex] = 255;
-            writingIndex++;
+            result[writingIndex++] = 255;
 
         }
     }
