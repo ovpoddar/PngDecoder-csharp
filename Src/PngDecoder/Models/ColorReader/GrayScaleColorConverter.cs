@@ -8,8 +8,6 @@ using System.Threading.Tasks;
 namespace PngDecoder.Models.ColorReader;
 internal class GrayScaleColorConverter : BaseRGBColorConverter
 {
-    private IHDRData _headerData;
-
     public GrayScaleColorConverter(IHDRData headerData) : base(headerData) { }
 
     internal override void Write(Span<byte> result, Span<byte> currentByte, ref int writingIndex)

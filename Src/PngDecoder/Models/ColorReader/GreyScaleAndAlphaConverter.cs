@@ -6,38 +6,37 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace PngDecoder.Models.ColorReader;
-internal class RGBColorConverter : BaseRGBColorConverter
+internal class GreyScaleAndAlphaConverter : BaseRGBColorConverter
 {
-
-    public RGBColorConverter(IHDRData headerData) : base(headerData) { }
+    public GreyScaleAndAlphaConverter(IHDRData headerData) : base(headerData) { }
 
     internal override void Write(Span<byte> result, Span<byte> currentByte, ref int writingIndex)
     {
         if (base.HeaderData.BitDepth == 8)
         {
-            Debug.Assert(currentByte.Length == 3);
+            Debug.Assert(currentByte.Length == 2);
 
+            result[writingIndex] = currentByte[0];
+            writingIndex++;
+            result[writingIndex] = currentByte[0];
+            writingIndex++;
             result[writingIndex] = currentByte[0];
             writingIndex++;
             result[writingIndex] = currentByte[1];
             writingIndex++;
-            result[writingIndex] = currentByte[2];
-            writingIndex++;
-            result[writingIndex] = 255;
-            writingIndex++;
+
         }
-        // 16
-        else
+        else // 16
         {
-            Debug.Assert(currentByte.Length == 6);
+            Debug.Assert(currentByte.Length == 4);
 
             result[writingIndex] = currentByte[0];
             writingIndex++;
+            result[writingIndex] = currentByte[0];
+            writingIndex++;
+            result[writingIndex] = currentByte[0];
+            writingIndex++;
             result[writingIndex] = currentByte[2];
-            writingIndex++;
-            result[writingIndex] = currentByte[4];
-            writingIndex++;
-            result[writingIndex] = 255;
             writingIndex++;
         }
     }

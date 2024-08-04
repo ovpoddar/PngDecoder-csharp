@@ -106,8 +106,8 @@ public class PNGDecode
             ColorType.Palette => new PalateColorConverter(paletteData!.Value, headerData),
             ColorType.GreyScale => new GrayScaleColorConverter(headerData),
             ColorType.RGB => new RGBColorConverter(headerData),
-            //ColorType.GreyScaleAndAlpha => new GreyScaleAndAlphaConverter(ihdr),
-            //ColorType.RGBA => new RGBAColorConverter(ihdr),
+            ColorType.GreyScaleAndAlpha => new GreyScaleAndAlphaConverter(headerData),
+            ColorType.RGBA => new RGBAColorConverter(headerData),
             _ => throw new NotSupportedException(),
         };
 
