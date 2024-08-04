@@ -10,7 +10,7 @@ internal class RGBAColorConverter : BaseRGBColorConverter
 {
     public RGBAColorConverter(IHDRData headerData) : base(headerData) { }
 
-    internal override void Write(Span<byte> result, Span<byte> currentByte, ref int writingIndex)
+    internal override void Write(ArraySegment<byte> result, Span<byte> currentByte, ref int writingIndex)
     {
         if (base.HeaderData.BitDepth == 8)
         {

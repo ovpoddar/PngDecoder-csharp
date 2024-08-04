@@ -10,7 +10,7 @@ internal class GrayScaleColorConverter : BaseRGBColorConverter
 {
     public GrayScaleColorConverter(IHDRData headerData) : base(headerData) { }
 
-    internal override void Write(Span<byte> result, Span<byte> currentByte, ref int writingIndex)
+    internal override void Write(ArraySegment<byte> result, Span<byte> currentByte, ref int writingIndex)
     {
         var bitDetails = base.BitDepthDetailsForGrayScale();
         if (bitDetails is { mask: not null, bit: not null, map: not null })

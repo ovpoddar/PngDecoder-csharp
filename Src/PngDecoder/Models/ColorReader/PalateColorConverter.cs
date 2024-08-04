@@ -8,7 +8,7 @@ internal class PalateColorConverter : BaseRGBColorConverter
     public PalateColorConverter(PLTEData palate, IHDRData headerData) : base(headerData) =>
         _palate = palate;
 
-    internal override void Write(Span<byte> result,
+    internal override void Write(ArraySegment<byte> result,
         Span<byte> currentByte, 
         ref int writingIndex)
     {

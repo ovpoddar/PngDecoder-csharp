@@ -77,7 +77,7 @@ public class PNGDecode
         filteredMutableRawStream.Position = 0;
         var scanline = headerData.GetScanLinesWidthWithPadding();
         BasePNGFilter? currentFilter = null;
-        Span<byte> writtenSection = new();
+        ArraySegment<byte> writtenSection = new();
         Span<byte> currentByte = headerData.BitDepth < 8
             ? stackalloc byte[1]
             : stackalloc byte[headerData.GetPixelSizeInByte()];
@@ -89,7 +89,7 @@ public class PNGDecode
             {
                 filteredMutableRawStream.ReadExactly(currentFilterByte);
                 currentFilter = GetFilter(filteredMutableRawStream, currentFilterByte[0]);
-                writtenSection = new Span<byte>(result, (int)(currentRow++ * headerData.Width * 4), (int)headerData.Width * 4);
+                writtenSection = new ArraySegment<byte>(result, (int)(currentRow++ * headerData.Width * 4), (int)headerData.Width * 4);
                 writingIndex = 0;
             }
             else

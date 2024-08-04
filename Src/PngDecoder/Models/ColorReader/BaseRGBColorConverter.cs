@@ -12,7 +12,7 @@ internal abstract class BaseRGBColorConverter
     protected BaseRGBColorConverter(IHDRData headerData) => 
         HeaderData = headerData;
 
-    internal abstract void Write(Span<byte> result, Span<byte> currentByte, ref int writingIndex);
+    internal abstract void Write(ArraySegment<byte> result, Span<byte> currentByte, ref int writingIndex);
 
     public (byte? step, byte? mask) BitDepthDetailsForPalated()
     {
