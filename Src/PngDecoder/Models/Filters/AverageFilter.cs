@@ -21,7 +21,7 @@ internal class AverageFilter : BasePNGFilter
         base.GetTopPixel(topPixel, scanlineWidth);
 
         for (byte i = 0; i < currentPixel.Length; i++)
-            currentPixel[i] = (byte)((_leftPixel[i] + currentPixel[i] + topPixel[i]) /2);
+            currentPixel[i] = (byte)(currentPixel[i] + ((_leftPixel[i] + topPixel[i]) / 2));
 
         currentPixel.CopyTo(_leftPixel);
         return base.UnApply(currentPixel, scanlineWidth);
